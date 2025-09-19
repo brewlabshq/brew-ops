@@ -9,6 +9,9 @@ warn() { echo "⚠️  $*"; }
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || die "Run as root (use sudo)."
 
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 info "Setting up service file"
 cp "$SCRIPT_DIR/example.sol.service" /etc/systemd/system/sol.service
 
