@@ -1,35 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -eou
+die()  { echo "❌ $*" >&2; exit 1; }
+info() { echo "➡️  $*"; }
+ok()   { echo "✅ $*"; }
+warn() { echo "⚠️  $*"; }
 
-die() { echo "❌ $*" >&2; exit 1; }
-info(){ echo "➡️  $*"; }
-ok(){ echo "✅ $*"; }
-warn(){ echo "⚠️  $*"; }
+[[ ${EUID:-$(id -u)} -eq 0 ]] || die "Run as root (use sudo)."
+id -u sol >/dev/null 2>&1 || die "User 'sol' not found."
+command -v curl >/dev/null 2>&1 || die "curl is not installed."
+command -v git  >/dev/null 2>&1 || die "git is not installed."
 
-[[ $EUID -eq 0 ]] || die "Run as root (use sudo)."
+# -------------------------
+# Install Rust for user 'sol'
+# -------------------------
+info "Installing Rust for user 'sol' (non-interactive)..."
+sudo -u sol -H bash -lc '
+  set -euo pipefail
+  if ! command -v rustup >/dev/null 2>&1; then
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+  fi
+  # Ensure cargo env is loaded for this subshell
+  if [[ -f "$HOME/.cargo/env" ]]; then
+    source "$HOME/.cargo/env"
+  fi
+  rustup component add rustfmt || true
+  rustup update
+'
+ok "Rust ready."
 
-su - sol
+# -------------------------
+# Get Solana (Jito fork)
+# -------------------------
+info "Cloning or updating jito-solana..."
+sudo -u sol -H bash -lc '
+  set -euo pipefail
+  cd "$HOME"
+  if [[ ! -d jito-solana ]]; then
+    git clone https://github.com/jito-foundation/jito-solana.git --recurse-submodules
+  else
+    cd jito-solana
+    git pull --ff-only
+    git submodule update --init --recursive
+  fi
+'
+ok "jito-solana ready."
 
-echo "Installing Rust..."
-curl https://sh.rustup.rs -sSf | sh
-source $HOME/.cargo/env
-rustup component add rustfmt
-rustup update
-
-
-echo "Installing Solana..."
-
-git clone https://github.com/jito-foundation/jito-solana.git --recurse-submodules
-
+# -------------------------
+# Update /home/sol/.bashrc
+# -------------------------
 BASHRC="/home/sol/.bashrc"
 BACKUP="/home/sol/.bashrc.$(date +%Y%m%d-%H%M%S).bak"
 
 cp -a "$BASHRC" "$BACKUP"
 
-
-if ! sudo grep -Fq '>>> solana env & aliases >>>' "$BASHRC"; then
-  sudo tee -a "$BASHRC" >/dev/null <<'EOF'
+if ! grep -Fq '>>> solana env & aliases >>>' "$BASHRC"; then
+  cat >> "$BASHRC" <<'EOF'
 # >>> solana env & aliases >>>
 export PATH="/home/sol/.local/share/solana/install/active_release/bin:$PATH"
 
@@ -39,11 +65,13 @@ alias monitor='agave-validator --ledger /mnt/ledger monitor'
 alias logtail='tail -f /home/sol/logs/solana-validator.log'
 # <<< solana env & aliases <<<
 EOF
-  sudo chown sol:sol "$BASHRC"
-  echo "✅ Appended block. Backup saved at: $BACKUP"
+  chown sol:sol "$BASHRC"
+  ok "Appended Solana env & aliases to $BASHRC (backup: $BACKUP)"
 else
-  echo "⚠️  Block already present; nothing appended."
+  warn "Block already present; nothing appended. (Backup: $BACKUP)"
 fi
 
 # Reload for user 'sol' (won't affect current shell)
-sudo -u sol bash -lc 'source ~/.bashrc'
+sudo -u sol -H bash -lc 'source ~/.bashrc >/dev/null 2>&1 || true'
+
+ok "All done."
