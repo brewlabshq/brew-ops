@@ -36,15 +36,17 @@ else
 fi
 '
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Copy cluster-specific start script
 case "$CLUSTER" in
   mainnet)
     info "Setting up mainnet start script"
-    cp ./mainnet.start.sh /home/sol/bin/start.sh
+    cp "$SCRIPT_DIR/mainnet.start.sh" /home/sol/bin/start.sh
     ;;
   testnet)
     info "Setting up testnet start script"
-    cp ./testnet.start.sh /home/sol/bin/start.sh
+    cp "$SCRIPT_DIR/testnet.start.sh" /home/sol/bin/start.sh
     ;;
   *)
     die "Unknown cluster: $CLUSTER (must be mainnet or testnet)"
