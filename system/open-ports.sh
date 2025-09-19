@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo
+set -e
 
 
 # Check if count is provided
@@ -14,13 +14,13 @@ fi
 
 open_ports() {
     echo "Opening ports..."
-    if [[ "$1" == "agave" ]]; then
+    if [[ $1 == "agave" ]]; then
         # Add your port opening logic for agave here
         echo "Opening ports for agave 8000-8025"
         ufw allow 8000:8025/tcp
         ufw allow 8000:8025/udp
         ufw reload
-    elif [[ "$1" == "firedancer" ]]; then
+    elif [[$1 == "firedancer" ]]; then
         # Add your port opening logic for firedancer here
         echo "Opening ports for firedancer 8900-9000 & 8001"
         ufw allow 8900:9000/tcp
