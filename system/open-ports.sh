@@ -20,7 +20,7 @@ open_ports() {
         ufw allow 8000:8025/tcp
         ufw allow 8000:8025/udp
         ufw reload
-    elif [[$1 == "firedancer" ]]; then
+    elif [[ $1 == "firedancer" ]]; then
         # Add your port opening logic for firedancer here
         echo "Opening ports for firedancer 8900-9000 & 8001"
         ufw allow 8900:9000/tcp
