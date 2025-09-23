@@ -34,12 +34,8 @@ aria2c -x16 -s16 --force-sequential=true --allow-overwrite=true \
   "$base_url/snapshot.tar.bz2" \
   "$base_url/incremental-snapshot.tar.bz2"
 
-# Clean up filenames and move them
-for f in *\?*; do
-  base="${f%%\?*}"               # strip query params
-  clean="${base%.tar.*}.tar.zst" # normalize extension
-  mv "$f" "/mnt/snapshots/$clean"
-done
+
+mv /home/ubuntu/brew-ops/solana/*.tar.zst /mnt/snapshots
 
 # Change ownership to sol user
 chown sol:sol /mnt/snapshots/*.tar.zst
