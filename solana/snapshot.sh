@@ -28,9 +28,11 @@ esac
 # Create snapshots directory if it doesn't exist
 mkdir -p /mnt/snapshots
 
-# Download files
-wget --trust-server-names "$base_url/snapshot.tar.bz2"
-wget --trust-server-names "$base_url/incremental-snapshot.tar.bz2"
+# Download files with aria2c
+aria2c -x16 -s16 --force-sequential=true --allow-overwrite=true \
+  --auto-file-renaming=false \
+  "$base_url/snapshot.tar.bz2" \
+  "$base_url/incremental-snapshot.tar.bz2"
 
 # Clean up filenames and move them
 for f in *\?*; do
@@ -40,4 +42,4 @@ for f in *\?*; do
 done
 
 # Change ownership to sol user
-chown -R sol:sol /mnt/snapshots/*.tar.zst
+chown sol:sol /mnt/snapshots/*.tar.zst
