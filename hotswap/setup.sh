@@ -33,30 +33,30 @@ info "Copying hotswap scripts..."
 
 # Copy example.identity-set.sh as identity-set
 if [ -f "$SCRIPT_DIR/example.identity-set.sh" ]; then
-    cp "$SCRIPT_DIR/example.identity-set.sh" "$TARGET_DIR/identity-set"
-    chmod +x "$TARGET_DIR/identity-set"
-    chown sol:sol "$TARGET_DIR/identity-set"
-    ok "Copied example.identity-set.sh as identity-set"
+    cp "$SCRIPT_DIR/example.identity-set.sh" "$TARGET_DIR/identity-set.sh"
+    chmod +x "$TARGET_DIR/identity-set.sh"
+    chown sol:sol "$TARGET_DIR/identity-set.sh"
+    ok "Copied example.identity-set.sh as identity-set.sh"
 else
     warn "example.identity-set.sh not found in source directory"
 fi
 
 # Copy example.migration.sh as migration
 if [ -f "$SCRIPT_DIR/example.migration.sh" ]; then
-    cp "$SCRIPT_DIR/example.migration.sh" "$w/migration"
-    chmod +x "$TARGET_DIR/migration"
-    chown sol:sol "$TARGET_DIR/migration"
-    ok "Copied example.migration.sh as migration"
+    cp "$SCRIPT_DIR/example.migration.sh" "$w/migration.sh"
+    chmod +x "$TARGET_DIR/migration.sh"
+    chown sol:sol "$TARGET_DIR/migration.sh"
+    ok "Copied example.migration.sh as migration.sh"
 else
     warn "example.migration.sh not found in source directory"
 fi
 
 # Copy example.identity-set-no-tower.sh as identity-set-no-tower
 if [ -f "$SCRIPT_DIR/example.identity-set-no-tower.sh" ]; then
-    cp "$SCRIPT_DIR/example.identity-set-no-tower.sh" "$TARGET_DIR/identity-set-no-tower"
-    chmod +x "$TARGET_DIR/identity-set-no-tower"
-    chown sol:sol "$TARGET_DIR/identity-set-no-tower"
-    ok "Copied example.identity-set-no-tower.sh as identity-set-no-tower"
+    cp "$SCRIPT_DIR/example.identity-set-no-tower.sh" "$TARGET_DIR/identity-set-no-tower.sh"
+    chmod +x "$TARGET_DIR/identity-set-no-tower.sh"
+    chown sol:sol "$TARGET_DIR/identity-set-no-tower.sh"
+    ok "Copied example.identity-set-no-tower.sh as identity-set-no-tower.sh"
 else
     warn "example.identity-set-no-tower.sh not found in source directory"
 fi
@@ -69,6 +69,6 @@ ok "Setup completed successfully!"
 info "Scripts are now available in $TARGET_DIR and can be run by the sol user"
 info ""
 info "Usage examples:"
-info "  sudo -u sol $TARGET_DIR/identity-set /path/to/identity.json"
-info "  sudo -u sol $TARGET_DIR/identity-set-no-tower /path/to/identity.json"
-info "  sudo -u sol $TARGET_DIR/migration user@hostname /path/to/identity.json"
+info "  sudo -u sol $TARGET_DIR/identity-set.sh /path/to/identity.json"
+info "  sudo -u sol $TARGET_DIR/identity-set-no-tower.sh /path/to/identity.json"
+info "  sudo -u sol $TARGET_DIR/migration.sh user@hostname /path/to/identity.json"
