@@ -43,7 +43,7 @@ fi
 
 # Copy example.migration.sh as migration
 if [ -f "$SCRIPT_DIR/example.migration.sh" ]; then
-    cp "$SCRIPT_DIR/example.migration.sh" "$w/migration.sh"
+    cp "$SCRIPT_DIR/example.migration.sh" "$TARGET_DIR/migration.sh"
     chmod +x "$TARGET_DIR/migration.sh"
     chown sol:sol "$TARGET_DIR/migration.sh"
     ok "Copied example.migration.sh as migration.sh"
