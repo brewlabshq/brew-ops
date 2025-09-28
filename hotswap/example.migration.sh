@@ -11,19 +11,19 @@ warn() { echo "⚠️  $*"; }
 # Check if required dependencies exist
 check_dependencies() {
     local missing_deps=()
-    
+
     if ! command -v agave-validator &> /dev/null; then
         missing_deps+=("agave-validator")
     fi
-    
+
     if ! command -v solana-keygen &> /dev/null; then
         missing_deps+=("solana-keygen")
     fi
-    
+
     if ! command -v scp &> /dev/null; then
         missing_deps+=("scp")
     fi
-    
+
     if [ ${#missing_deps[@]} -ne 0 ]; then
         die "Missing required dependencies: ${missing_deps[*]}. Please install them before running this script."
     fi
@@ -35,15 +35,20 @@ check_dependencies
 ok "All dependencies found"
 
 # Check if required arguments are provided
-if [ $# -lt 2 ]; then
-    die "Usage: $0 <ssh-destination> <identity-file-path>"
+if [ $# -lt 3 ]; then
+    die "Usage: $0 <ssh-destination> <identity-file-path> <tempory-identity-path>"
 fi
 
 SSH_DEST="$1"
 IDENTITY_FILE="$2"
+TEMP_IDENTITY_FILE="$3"
 
 # Check if the identity file exists
 if [ ! -f "$IDENTITY_FILE" ]; then
+    die "Identity file '$IDENTITY_FILE' does not exist"
+fi
+# Check if the identity file exists
+if [ ! -f "$TEMP_IDENTITY_FILE" ]; then
     die "Identity file '$IDENTITY_FILE' does not exist"
 fi
 
@@ -60,6 +65,7 @@ check_ssh_connection() {
 info "Starting migration process..."
 info "SSH destination: $SSH_DEST"
 info "Identity file: $IDENTITY_FILE"
+info "Temp Identity file: $TEMP_IDENTITY_FILE"
 
 # Test SSH connection before proceeding
 check_ssh_connection
@@ -69,9 +75,9 @@ info "Waiting for restart window..."
 agave-validator -l /mnt/ledger wait-for-restart-window --min-idle-time 2 --skip-new-snapshot-check
 
 # Set identity
-info "Setting identity from: $IDENTITY_FILE"
-agave-validator -l /mnt/ledger set-identity "$IDENTITY_FILE"
-ln -sf "$IDENTITY_FILE" /home/sol/id.json
+info "Setting identity from: $TEMP_IDENTITY_FILE"
+agave-validator -l /mnt/ledger set-identity "$TEMP_IDENTITY_FILE"
+ln -sf "$TEMP_IDENTITY_FILE" /home/sol/id.json
 
 # Get the public key from the identity file for tower file naming
 PUBKEY=$(solana-keygen pubkey "$IDENTITY_FILE")

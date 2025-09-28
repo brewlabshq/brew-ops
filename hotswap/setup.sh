@@ -11,6 +11,8 @@ warn() { echo "⚠️  $*"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="/home/sol/scripts"
 
+
+
 info "Setting up hotswap scripts for sol user..."
 info "Source directory: $SCRIPT_DIR"
 info "Target directory: $TARGET_DIR"
@@ -27,6 +29,9 @@ if [ ! -d "$TARGET_DIR" ]; then
 else
     info "Directory already exists: $TARGET_DIR"
 fi
+
+info "Cleaning up old files..."
+rm -rf "$TARGET_DIR/*"
 
 # Copy the hotswap scripts
 info "Copying hotswap scripts..."
