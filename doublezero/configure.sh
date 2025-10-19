@@ -33,15 +33,6 @@ if [ "$EUID" -ne 0 ]; then
     die "This script must be run as root or with sudo"
 fi
 
-# Check if doublezero is installed
-if ! command -v doublezero &> /dev/null; then
-    die "Doublezero is not installed. Please run the setup script first."
-fi
-
-# Check if doublezerod service exists
-if ! systemctl list-unit-files | grep -q "doublezerod.service"; then
-    die "Doublezerod service not found. Please ensure doublezero is properly installed."
-fi
 
 info "Configuring Doublezero for environment: $DESIRED_DOUBLEZERO_ENV"
 
