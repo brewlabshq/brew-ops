@@ -9,6 +9,7 @@ Restart=always
 RestartSec=1
 User=sol
 LimitNOFILE=1000000
+LimitMEMLOCK=2000000000
 LogRateLimitIntervalSec=0
 Environment="SOLANA_METRICS_CONFIG=host=https://metrics.solana.com:8086,db=mainnet-beta,u=mainnet-beta_write,p=password"
 Environment="PATH=/home/sol/bin:/home/sol/.local/share/solana/install/active_release/bin:/home/sol/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"

@@ -40,6 +40,8 @@ net.core.rmem_max=134217728
 net.core.rmem_default=134217728
 net.core.wmem_max=134217728
 net.core.wmem_default=134217728
+
+fs.nr_open = 1000000
 EOM
 
 # Reload sysctl settings
