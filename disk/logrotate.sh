@@ -34,6 +34,7 @@ info "Setting up logrotate for: $LOG_FILE"
 info "Creating logrotate configuration..."
 cat > logrotate.sol <<EOF
 $LOG_FILE {
+    su sol sol
     rotate 5
     daily
     missingok
