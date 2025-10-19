@@ -19,14 +19,19 @@ if [ ! -f "$VALIDATOR_KEYPAIR" ]; then
     die "Validator keypair file '$VALIDATOR_KEYPAIR' does not exist"
 fi
 
-# Check if solana CLI is available
-if ! command -v solana &> /dev/null; then
-    die "Solana CLI is not installed or not in PATH"
+# Check if solana CLI is available for sol user
+if ! sudo -u sol command -v solana &> /dev/null; then
+    die "Solana CLI is not installed or not in PATH for sol user"
 fi
 
-# Check if doublezero is available
-if ! command -v doublezero &> /dev/null; then
-    die "Doublezero is not installed or not in PATH"
+# Check if doublezero is available for sol user
+if ! sudo -u sol command -v doublezero &> /dev/null; then
+    die "Doublezero is not installed or not in PATH for sol user"
+fi
+
+# Check if solana-keygen is available for sol user
+if ! sudo -u sol command -v solana-keygen &> /dev/null; then
+    die "Solana-keygen is not installed or not in PATH for sol user"
 fi
 
 info "Generating offchain message signature..."
