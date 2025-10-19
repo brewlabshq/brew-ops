@@ -32,43 +32,43 @@ fi
 info "Generating offchain message signature..."
 info "Validator keypair: $VALIDATOR_KEYPAIR"
 
-# Get doublezero address
+# Get doublezero address as sol user
 info "Getting doublezero address..."
-DOUBLEZERO_ADDRESS=$(sudo -u sol doublezero address 2>/dev/null || doublezero address 2>/dev/null)
+DOUBLEZERO_ADDRESS=$(sudo -u sol doublezero address 2>/dev/null)
 
 if [ -z "$DOUBLEZERO_ADDRESS" ]; then
-    die "Failed to get doublezero address. Make sure doublezero is properly configured."
+    die "Failed to get doublezero address as sol user. Make sure doublezero is properly configured for the sol user."
 fi
 
 info "Doublezero address: $DOUBLEZERO_ADDRESS"
 
-# Generate the offchain message signature
+# Generate the offchain message signature as sol user
 info "Signing offchain message..."
-SIGNATURE=$(solana sign-offchain-message -k "$VALIDATOR_KEYPAIR" "service_key=$DOUBLEZERO_ADDRESS")
+SIGNATURE=$(sudo -u sol solana sign-offchain-message -k "$VALIDATOR_KEYPAIR" "service_key=$DOUBLEZERO_ADDRESS")
 
 if [ -z "$SIGNATURE" ]; then
-    die "Failed to generate signature"
+    die "Failed to generate signature as sol user"
 fi
 
 ok "Offchain message signature generated successfully!"
 info "Signature: $SIGNATURE"
 
-# Get validator identity (public key)
+# Get validator identity (public key) as sol user
 info "Getting validator identity..."
-VALIDATOR_IDENTITY=$(solana-keygen pubkey "$VALIDATOR_KEYPAIR")
+VALIDATOR_IDENTITY=$(sudo -u sol solana-keygen pubkey "$VALIDATOR_KEYPAIR")
 
 if [ -z "$VALIDATOR_IDENTITY" ]; then
-    die "Failed to get validator identity from keypair"
+    die "Failed to get validator identity from keypair as sol user"
 fi
 
 info "Validator identity: $VALIDATOR_IDENTITY"
 
-# Check if doublezero-solana CLI is available
-if ! command -v doublezero-solana &> /dev/null; then
-    warn "doublezero-solana CLI not found. Skipping passport request."
+# Check if doublezero-solana CLI is available for sol user
+if ! sudo -u sol command -v doublezero-solana &> /dev/null; then
+    warn "doublezero-solana CLI not found for sol user. Skipping passport request."
     info ""
-    info "Manual passport request command:"
-    info "doublezero-solana passport request-validator-access -u mainnet-beta \\"
+    info "Manual passport request command (run as sol user):"
+    info "sudo -u sol doublezero-solana passport request-validator-access -u mainnet-beta \\"
     info "  -k $VALIDATOR_KEYPAIR \\"
     info "  --primary-validator-id $VALIDATOR_IDENTITY \\"
     info "  --signature $SIGNATURE \\"
@@ -76,9 +76,9 @@ if ! command -v doublezero-solana &> /dev/null; then
     exit 0
 fi
 
-# Make the passport request
-info "Making passport request to Doublezero..."
-doublezero-solana passport request-validator-access -u mainnet-beta \
+# Make the passport request as sol user
+info "Making passport request to Doublezero as sol user..."
+sudo -u sol doublezero-solana passport request-validator-access -u mainnet-beta \
   -k "$VALIDATOR_KEYPAIR" \
   --primary-validator-id "$VALIDATOR_IDENTITY" \
   --signature "$SIGNATURE" \
