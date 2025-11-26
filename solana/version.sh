@@ -54,9 +54,9 @@ sudo -u sol -H TAG="$TAG" bash -lc '
   CI_COMMIT="$(git rev-parse HEAD)" scripts/cargo-install-all.sh --validator-only "$RELEASE_DIR"
 
   # Point active_release -> releases/$TAG (so PATH .../active_release/bin works)
-  ln -sfn "$RELEASE_DIR" "$INSTALL_ROOT/active_release"
+  ln -sfn "$RELEASE_DIR" "/home/sol/.local/share/solana/install/active_release"
 
-  echo "Active release now points to: $INSTALL_ROOT/active_release -> $RELEASE_DIR"
+  echo "Active release now points to: /home/sol/.local/share/solana/install/active_release -> $RELEASE_DIR"
 '
 
 ok "jito-solana $TAG installed. PATH should include ~/.local/share/solana/install/active_release/bin"
