@@ -73,6 +73,9 @@ sudo -u sol -H CLIENT="$CLIENT" REPO_URL="$REPO_URL" REPO_DIR="$REPO_DIR" CLIENT
   echo "Checking out tag $TAG..."
   git checkout "tags/$TAG"
 
+  echo "Updating submodules..."
+  git submodule update --init --recursive
+
   # Prepare release directory
   mkdir -p "$RELEASE_DIR"
 
