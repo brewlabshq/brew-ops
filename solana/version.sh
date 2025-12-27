@@ -11,16 +11,43 @@ id -u sol >/dev/null 2>&1 || die "User 'sol' not found."
 command -v curl >/dev/null 2>&1 || die "curl is not installed."
 command -v git  >/dev/null 2>&1 || die "git is not installed."
 
-TAG="${1:-}"
-[[ -n "$TAG" ]] || die "Usage: $0 <git-tag> (e.g., v1.18.22-jito)"
+# Parse arguments
+CLIENT="${1:-}"
+TAG="${2:-}"
 
-info "Cloning or updating jito-solana for tag: $TAG"
+# Validate client
+if [[ -z "$CLIENT" ]]; then
+    die "Usage: $0 <client> <git-tag>
+  Clients: jito, bam
+  Example: $0 jito v1.18.22-jito
+  Example: $0 bam v3.0.12-bam"
+fi
+
+# Set repository details based on client
+case "$CLIENT" in
+    jito)
+        REPO_URL="https://github.com/jito-foundation/jito-solana.git"
+        REPO_DIR="/home/sol/jito-solana"
+        CLIENT_NAME="jito-solana"
+        ;;
+    bam)
+        REPO_URL="https://github.com/jito-labs/bam-client.git"
+        REPO_DIR="/home/sol/bam-client"
+        CLIENT_NAME="bam-client"
+        ;;
+    *)
+        die "Invalid client: $CLIENT. Valid options: jito, bam"
+        ;;
+esac
+
+# Validate tag
+[[ -n "$TAG" ]] || die "Usage: $0 $CLIENT <git-tag> (e.g., $0 $CLIENT v1.18.22-jito or $0 $CLIENT v3.0.12-bam)"
+
+info "Cloning or updating $CLIENT_NAME for tag: $TAG"
 
 # Run the whole flow as user 'sol'
-sudo -u sol -H TAG="$TAG" bash -lc '
+sudo -u sol -H CLIENT="$CLIENT" REPO_URL="$REPO_URL" REPO_DIR="$REPO_DIR" CLIENT_NAME="$CLIENT_NAME" TAG="$TAG" bash -lc '
   set -euo pipefail
-  REPO_URL="https://github.com/jito-foundation/jito-solana.git"
-  REPO_DIR="$HOME/jito-solana"
   INSTALL_ROOT="$HOME/.local/share/solana/install"
   RELEASE_DIR="$INSTALL_ROOT/releases/$TAG"
 
@@ -28,7 +55,7 @@ sudo -u sol -H TAG="$TAG" bash -lc '
   mkdir -p "$INSTALL_ROOT/releases"
 
   if [[ ! -d "$REPO_DIR" ]]; then
-    echo "Cloning repo..."
+    echo "Cloning $CLIENT_NAME repo..."
     git clone "$REPO_URL" --recurse-submodules "$REPO_DIR"
   fi
 
@@ -53,12 +80,11 @@ sudo -u sol -H TAG="$TAG" bash -lc '
   echo "Building and installing to: $RELEASE_DIR"
   CI_COMMIT="$(git rev-parse HEAD)" scripts/cargo-install-all.sh --validator-only "$RELEASE_DIR"
 
-  # Point active_release -> releases/$TAG (so PATH .../active_release/bin works)
-  ln -sfn "$RELEASE_DIR" "/home/sol/.local/share/solana/install/active_release"
+ 
 
-  echo "Active release now points to: /home/sol/.local/share/solana/install/active_release -> $RELEASE_DIR"
+  echo "Active release now points to: $RELEASE_DIR"
 '
 
-ok "jito-solana $TAG installed. PATH should include ~/.local/share/solana/install/active_release/bin"
+ok "$CLIENT_NAME $TAG installed. PATH should include ~/.local/share/solana/install/active_release/bin"
 echo "Tip: for user 'sol', ensure ~/.bashrc exports:"
 echo '  export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"'
