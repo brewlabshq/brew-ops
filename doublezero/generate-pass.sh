@@ -66,7 +66,7 @@ info "Doublezero address: $DOUBLEZERO_ADDRESS"
 # Generate the offchain message signature as sol user (with proper environment)
 info "Signing offchain message..."
 if sudo -u sol bash -lc 'command -v solana' &> /dev/null; then
-    SIGNATURE=$(sudo -u sol bash -lc "solana sign-offchain-message -k '$VALIDATOR_KEYPAIR' 'service_key=$DOUBLEZERO_ADDRESS'" 2>/dev/null)
+    SIGNATURE=$(sudo -u sol bash -lc "/home/sol/.local/share/solana/install/active_release/bin/solana sign-offchain-message -k '$VALIDATOR_KEYPAIR' 'service_key=$DOUBLEZERO_ADDRESS'" 2>/dev/null)
 else
     SIGNATURE=$(sudo -u sol bash -lc "/home/sol/.local/share/solana/install/active_release/bin/solana sign-offchain-message -k '$VALIDATOR_KEYPAIR' 'service_key=$DOUBLEZERO_ADDRESS'" 2>/dev/null)
 fi
@@ -81,7 +81,7 @@ info "Signature: $SIGNATURE"
 # Get validator identity (public key) as sol user (with proper environment)
 info "Getting validator identity..."
 if sudo -u sol bash -lc 'command -v solana-keygen' &> /dev/null; then
-    VALIDATOR_IDENTITY=$(sudo -u sol bash -lc "solana-keygen pubkey '$VALIDATOR_KEYPAIR'" 2>/dev/null)
+    VALIDATOR_IDENTITY=$(sudo -u sol bash -lc "/home/sol/.local/share/solana/install/active_release/bin/solana-keygen pubkey '$VALIDATOR_KEYPAIR'" 2>/dev/null)
 else
     VALIDATOR_IDENTITY=$(sudo -u sol bash -lc "/home/sol/.local/share/solana/install/active_release/bin/solana-keygen pubkey '$VALIDATOR_KEYPAIR'" 2>/dev/null)
 fi
