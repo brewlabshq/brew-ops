@@ -64,7 +64,7 @@ if ! check_existing_installation; then
     
     info "Installing Doublezero version 0.6.6..."
     apt-get update
-    apt-get install -y doublezero=0.6.6-1
+    apt-get install -y doublezero=0.8.0-1
     ok "Doublezero installed successfully"
 fi
 
