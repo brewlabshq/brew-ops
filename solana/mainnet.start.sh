@@ -57,6 +57,5 @@ exec  /home/sol/.local/share/solana/install/active_release/bin/agave-validator \
 --entrypoint entrypoint3.mainnet-beta.solana.com:8001 \
 --entrypoint entrypoint4.mainnet-beta.solana.com:8001 \
 --entrypoint entrypoint5.mainnet-beta.solana.com:8001 \
---incremental-snapshot-interval-slots 0 \
 --minimal-snapshot-download-speed 10485760 \
 --block-production-method central-scheduler-greedy
