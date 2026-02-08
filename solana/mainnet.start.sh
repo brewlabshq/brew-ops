@@ -18,6 +18,7 @@ MERKLE_ROOT_UPLOAD_AUTHORITY=8F4jGUmxF36vQ6yabnsxX6AQVXdKBhs8kGSUuRKSg8Xt
 JITO_COMMISION_BPS=0
 JITO_SHRED_RECEIVER_ADDRESS=64.130.50.14:1002
 JITO_BLOCK_ENGINE_URL=https://frankfurt.mainnet.block-engine.jito.wtf
+JITO_BAM_URL=http://frankfurt.mainnet.bam.jito.wtf
 
 
 if [[ -d /mnt/ledger/snapshot-store ]]; then
@@ -39,6 +40,7 @@ exec  /home/sol/.local/share/solana/install/active_release/bin/agave-validator \
 --rpc-port 8899 \
 --limit-ledger-size \
 --private-rpc \
+--bam-url $JITO_BAM_URL \
 --tip-payment-program-pubkey $TIP_PROGRAM_PUBKEY \
 --tip-distribution-program-pubkey $TIP_DISTRIBUTION_PROGRAM_PUBKEY \
 --merkle-root-upload-authority $MERKLE_ROOT_UPLOAD_AUTHORITY \
