@@ -41,7 +41,6 @@ exec  /home/sol/.local/share/solana/install/active_release/bin/agave-validator \
 --tip-payment-program-pubkey $TIP_PROGRAM_PUBKEY \
 --tip-distribution-program-pubkey $TIP_DISTRIBUTION_PROGRAM_PUBKEY \
 --merkle-root-upload-authority $MERKLE_ROOT_UPLOAD_AUTHORITY \
---known-validator 7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2 \
 --known-validator GdnSyH3YtwcxFvQrVVJMm1JhTS4QVX7MFsX56uJLUfiZ \
 --known-validator DE1bawNcRJB9rVm3buyMVfr8mBEoyyu73NBovf2oXJsJ \
 --known-validator CakcnaRDHka2gXyfbEd2d3xsvkJkqsLw2akB3zsN1D2S \
