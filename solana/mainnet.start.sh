@@ -35,6 +35,7 @@ exec  /home/sol/.local/share/solana/install/active_release/bin/agave-validator \
 --ledger $LEDGER \
 --accounts $ACCOUNTS \
 --snapshots $SNAPSHOT \
+--rpc-bind-address 0.0.0.0 \
 --rpc-port 8899 \
 --limit-ledger-size \
 --private-rpc \
