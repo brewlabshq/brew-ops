@@ -62,9 +62,9 @@ if ! check_existing_installation; then
     info "Installing Doublezero repository..."
     curl -1sLf https://dl.cloudsmith.io/public/malbeclabs/doublezero/setup.deb.sh | sudo -E bash
     
-    info "Installing Doublezero version 0.6.6..."
+    info "Installing latest Doublezero version"
     apt-get update
-    apt-get install -y doublezero=0.8.0-1
+    apt-get install -y doublezero
     ok "Doublezero installed successfully"
 fi
 
