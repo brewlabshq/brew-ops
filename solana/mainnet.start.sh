@@ -40,6 +40,9 @@ exec  /home/sol/.local/share/solana/install/active_release/bin/agave-validator \
 --rpc-port 8899 \
 --limit-ledger-size \
 --private-rpc \
+--dynamic-port-range 8000-8100 \
+--no-port-check \
+--expected-shred-version 50093 \
 --bam-url $JITO_BAM_URL \
 --tip-payment-program-pubkey $TIP_PROGRAM_PUBKEY \
 --tip-distribution-program-pubkey $TIP_DISTRIBUTION_PROGRAM_PUBKEY \
