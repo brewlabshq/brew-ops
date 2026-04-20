@@ -19,6 +19,6 @@ sudo apt upgrade -y
 
 # Install required dependencies
 echo "Installing system dependencies..."
-sudo apt-get install -y libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang cmake make libprotobuf-dev protobuf-compiler libclang-dev
+sudo apt-get install -y libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang cmake make libprotobuf-dev protobuf-compiler libclang-dev smartmontools
 
 echo "✅ System setup complete!"
