@@ -26,6 +26,21 @@ if ! ip link show dev "$IFACE" >/dev/null 2>&1; then
   exit 1
 fi
 
+is_bond_iface="no"
+bond_master="none"
+bond_members=""
+
+if [[ -d "/sys/class/net/$IFACE/bonding" ]]; then
+  is_bond_iface="yes"
+  if [[ -r "/sys/class/net/$IFACE/bonding/slaves" ]]; then
+    bond_members="$(tr ' ' '\n' < "/sys/class/net/$IFACE/bonding/slaves" | sed '/^$/d' | paste -sd ', ' -)"
+  fi
+fi
+
+if [[ -L "/sys/class/net/$IFACE/master" ]]; then
+  bond_master="$(basename "$(readlink -f "/sys/class/net/$IFACE/master")")"
+fi
+
 for cmd in git cargo rustc ethtool ip lscpu setcap getcap; do
   need_cmd "$cmd"
 done
@@ -46,23 +61,22 @@ duplex="$(ethtool "$IFACE" 2>/dev/null | awk -F': ' '/Duplex:/ {print $2}')"
 link="$(ethtool "$IFACE" 2>/dev/null | awk -F': ' '/Link detected:/ {print $2}')"
 port="$(ethtool "$IFACE" 2>/dev/null | awk -F': ' '/Port:/ {print $2}')"
 
-rx_ring="$(ethtool -g "$IFACE" 2>/dev/null | awk '
-  /Current hardware settings:/ {in_cur=1; next}
-  in_cur && $1=="RX:" {gsub(/[[:space:]]/, "", $2); print $2; exit}
-')"
-tx_ring="$(ethtool -g "$IFACE" 2>/dev/null | awk '
-  /Current hardware settings:/ {in_cur=1; next}
-  in_cur && $1=="TX:" {gsub(/[[:space:]]/, "", $2); print $2; exit}
-')"
+rx_ring="$(
+  ethtool -g "$IFACE" 2>/dev/null | awk '
+    /Current hardware settings:/ {in_cur=1; next}
+    in_cur && $1=="RX:" {gsub(/[[:space:]]/, "", $2); print $2; exit}
+  ' || true
+)"
+tx_ring="$(
+  ethtool -g "$IFACE" 2>/dev/null | awk '
+    /Current hardware settings:/ {in_cur=1; next}
+    in_cur && $1=="TX:" {gsub(/[[:space:]]/, "", $2); print $2; exit}
+  ' || true
+)"
 
 numa_nodes="$(lscpu 2>/dev/null | awk -F: '/NUMA node\(s\)/ {gsub(/^[ \t]+/, "", $2); print $2}')"
 cpu_model="$(lscpu 2>/dev/null | awk -F: '/Model name:/ {gsub(/^[ \t]+/, "", $2); print $2; exit}')"
 cpu_count="$(lscpu 2>/dev/null | awk -F: '/^CPU\(s\):/ {gsub(/^[ \t]+/, "", $2); print $2; exit}')"
-
-bond_master="none"
-if [[ -L "/sys/class/net/$IFACE/master" ]]; then
-  bond_master="$(basename "$(readlink -f "/sys/class/net/$IFACE/master")")"
-fi
 
 line
 say "XDP Server Check"
@@ -76,7 +90,11 @@ printf '%-18s %s\n' "NUMA nodes:" "${numa_nodes:-unknown}"
 printf '%-18s %s\n' "Interface:" "$IFACE"
 printf '%-18s %s\n' "Source IP:" "${src_ip:-unknown}"
 printf '%-18s %s\n' "Route:" "${route_line:-unknown}"
+printf '%-18s %s\n' "Is bond device:" "$is_bond_iface"
 printf '%-18s %s\n' "Bond master:" "$bond_master"
+if [[ "$is_bond_iface" == "yes" ]]; then
+  printf '%-18s %s\n' "Bond members:" "${bond_members:-unknown}"
+fi
 
 say ""
 say "NIC"
@@ -88,8 +106,18 @@ printf '%-18s %s\n' "Port:" "${port:-unknown}"
 printf '%-18s %s\n' "Speed:" "${speed:-unknown}"
 printf '%-18s %s\n' "Duplex:" "${duplex:-unknown}"
 printf '%-18s %s\n' "Link detected:" "${link:-unknown}"
-printf '%-18s %s\n' "RX ring:" "${rx_ring:-unknown}"
-printf '%-18s %s\n' "TX ring:" "${tx_ring:-unknown}"
+printf '%-18s %s\n' "RX ring:" "${rx_ring:-unsupported}"
+printf '%-18s %s\n' "TX ring:" "${tx_ring:-unsupported}"
+
+if [[ "$is_bond_iface" == "yes" ]]; then
+  say ""
+  say "XDP cannot be validated on a bonded interface."
+  say "Run this script again with one of the physical member NICs."
+  if [[ -n "${bond_members:-}" ]]; then
+    say "Suggested members: $bond_members"
+  fi
+  exit 1
+fi
 
 say ""
 say "Preparing agave-xdp-compatibility"
