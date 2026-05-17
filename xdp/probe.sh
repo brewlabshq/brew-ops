@@ -5,6 +5,7 @@ REPO_URL="${REPO_URL:-https://github.com/anza-xyz/agave-xdp-compatibility}"
 REPO_DIR="${REPO_DIR:-$HOME/agave-xdp-compatibility}"
 DNS_TARGET="${DNS_TARGET:-1.1.1.1}"
 IFACE="${1:-$(ip route get "$DNS_TARGET" 2>/dev/null | awk '/dev/ {for(i=1;i<=NF;i++) if ($i=="dev") {print $(i+1); exit}}')}"
+BIN=""
 
 say() { printf '%s\n' "$*"; }
 line() { printf '%s\n' "============================================================"; }
@@ -226,6 +227,64 @@ line
 
 healthy_xdp="$(awk -F'|' '$3=="passed" {print $1}' "$SUMMARY_FILE" | join_by_comma || true)"
 healthy_zc="$(awk -F'|' '$4=="passed" {print $1}' "$SUMMARY_FILE" | join_by_comma || true)"
+host="$(hostname)"
+kernel="$(uname -r)"
+selected_driver="$(ethtool -i "$IFACE" 2>/dev/null | awk -F': ' '/^driver:/ {print $2}')"
+selected_firmware="$(ethtool -i "$IFACE" 2>/dev/null | awk -F': ' '/^firmware-version:/ {print $2}')"
+
+final_interface="$IFACE"
+if is_bond_device "$IFACE"; then
+  final_interface="$IFACE (healthy member: ${healthy_xdp:-none})"
+fi
+
+final_xdp_probe="failed"
+final_zc_probe="failed"
+final_xdp_verdict="NOT GOOD for XDP"
+final_zc_verdict="NOT GOOD for Zero-Copy"
+final_overall="NOT GOOD for XDP"
+
+if [[ -s "$SUMMARY_FILE" ]]; then
+  if is_bond_device "$IFACE"; then
+    if [[ -n "${healthy_xdp:-}" ]]; then
+      final_xdp_probe="passed"
+      final_xdp_verdict="GOOD for XDP"
+    fi
+    if [[ -n "${healthy_zc:-}" ]]; then
+      final_zc_probe="passed"
+      final_zc_verdict="GOOD for Zero-Copy"
+      final_overall="GOOD for XDP and Zero-Copy"
+    elif [[ -n "${healthy_xdp:-}" ]]; then
+      final_zc_probe="skipped"
+      final_zc_verdict="NOT RECOMMENDED for Zero-Copy"
+      final_overall="GOOD for XDP; Zero-Copy not recommended on this setup"
+    fi
+  else
+    IFS='|' read -r _iface _driver final_xdp_probe final_zc_probe final_overall < "$SUMMARY_FILE"
+
+    case "$final_xdp_probe" in
+      passed) final_xdp_verdict="GOOD for XDP" ;;
+      *) final_xdp_verdict="NOT GOOD for XDP" ;;
+    esac
+
+    case "$final_zc_probe" in
+      passed) final_zc_verdict="GOOD for Zero-Copy" ;;
+      skipped) final_zc_verdict="NOT RECOMMENDED for Zero-Copy" ;;
+      *) final_zc_verdict="NOT GOOD for Zero-Copy" ;;
+    esac
+  fi
+fi
+
+printf '%-18s %s\n' "Host:" "$host"
+printf '%-18s %s\n' "Interface:" "$final_interface"
+printf '%-18s %s\n' "Driver:" "${selected_driver:-unknown}"
+printf '%-18s %s\n' "Firmware:" "${selected_firmware:-unknown}"
+printf '%-18s %s\n' "Kernel:" "$kernel"
+printf '%-18s %s\n' "XDP probe:" "$final_xdp_probe"
+printf '%-18s %s\n' "Zero-copy probe:" "$final_zc_probe"
+printf '%-18s %s\n' "XDP verdict:" "$final_xdp_verdict"
+printf '%-18s %s\n' "Zero-copy verdict:" "$final_zc_verdict"
+printf '%-18s %s\n' "Overall:" "$final_overall"
+say ""
 
 if [[ -n "${healthy_xdp:-}" ]]; then
   printf '%-18s %s\n' "Healthy for XDP:" "$healthy_xdp"
