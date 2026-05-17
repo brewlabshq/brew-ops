@@ -102,6 +102,7 @@ probe_iface() {
   local iface="$1"
   local driver driver_ver firmware bus_info speed duplex link port rx_ring tx_ring bond_master
   local xdp_result="not-run" zc_result="not-run" xdp_status="UNKNOWN" zc_status="UNKNOWN" overall="UNKNOWN"
+  local xdp_log zc_log
 
   driver="$(ethtool -i "$iface" 2>/dev/null | awk -F': ' '/^driver:/ {print $2}')"
   driver_ver="$(ethtool -i "$iface" 2>/dev/null | awk -F': ' '/^version:/ {print $2}')"
@@ -141,13 +142,20 @@ probe_iface() {
   say ""
   say "Running XDP probe on $iface"
   setcap cap_net_admin,cap_net_raw,cap_bpf+ep "$BIN"
-  if RUST_LOG=info "$BIN" "$DNS_TARGET" --xdp-interface "$iface" --timeout-ms 1000; then
+  xdp_log="$(mktemp)"
+  if RUST_LOG=info "$BIN" "$DNS_TARGET" --xdp-interface "$iface" --timeout-ms 1000 > >(tee "$xdp_log") 2>&1; then
     xdp_result="passed"
     xdp_status="GOOD for XDP"
   else
-    xdp_result="failed"
-    xdp_status="NOT GOOD for XDP"
+    if grep -q 'Device or resource busy\|EBUSY\|failed to create AF_XDP socket' "$xdp_log"; then
+      xdp_result="blocked"
+      xdp_status="BLOCKED (AF_XDP queue busy)"
+    else
+      xdp_result="failed"
+      xdp_status="NOT GOOD for XDP"
+    fi
   fi
+  rm -f "$xdp_log"
 
   say ""
   say "Running Zero-Copy probe on $iface"
@@ -159,17 +167,26 @@ probe_iface() {
     zc_status="NOT RECOMMENDED for Zero-Copy (bnxt_en)"
   else
     setcap cap_net_admin,cap_net_raw,cap_bpf,cap_perfmon+ep "$BIN"
-    if RUST_LOG=info "$BIN" "$DNS_TARGET" --xdp-interface "$iface" --timeout-ms 1000 --xdp-zero-copy; then
+    zc_log="$(mktemp)"
+    if RUST_LOG=info "$BIN" "$DNS_TARGET" --xdp-interface "$iface" --timeout-ms 1000 --xdp-zero-copy > >(tee "$zc_log") 2>&1; then
       zc_result="passed"
       zc_status="GOOD for Zero-Copy"
     else
-      zc_result="failed"
-      zc_status="NOT GOOD for Zero-Copy"
+      if grep -q 'Device or resource busy\|EBUSY\|failed to create AF_XDP socket' "$zc_log"; then
+        zc_result="blocked"
+        zc_status="BLOCKED (AF_XDP queue busy)"
+      else
+        zc_result="failed"
+        zc_status="NOT GOOD for Zero-Copy"
+      fi
     fi
+    rm -f "$zc_log"
   fi
 
   if [[ "$xdp_result" == "passed" && "$zc_result" == "passed" ]]; then
     overall="GOOD for XDP and Zero-Copy"
+  elif [[ "$xdp_result" == "blocked" || "$zc_result" == "blocked" ]]; then
+    overall="XDP candidate, but AF_XDP queue is busy"
   elif [[ "$xdp_result" == "passed" && "$zc_result" == "skipped" ]]; then
     overall="GOOD for XDP; Zero-Copy not recommended on this setup"
   elif [[ "$xdp_result" == "passed" ]]; then
@@ -263,11 +280,13 @@ if [[ -s "$SUMMARY_FILE" ]]; then
 
     case "$final_xdp_probe" in
       passed) final_xdp_verdict="GOOD for XDP" ;;
+      blocked) final_xdp_verdict="BLOCKED (AF_XDP queue busy)" ;;
       *) final_xdp_verdict="NOT GOOD for XDP" ;;
     esac
 
     case "$final_zc_probe" in
       passed) final_zc_verdict="GOOD for Zero-Copy" ;;
+      blocked) final_zc_verdict="BLOCKED (AF_XDP queue busy)" ;;
       skipped) final_zc_verdict="NOT RECOMMENDED for Zero-Copy" ;;
       *) final_zc_verdict="NOT GOOD for Zero-Copy" ;;
     esac
