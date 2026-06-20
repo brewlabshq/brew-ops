@@ -22,7 +22,7 @@ fi
 
 MY_IP=$(curl -s --max-time 5 ifconfig.me)
 if [ -z "$MY_IP" ]; then
-    echo "ERROR: could not determine server IP, defaulting to temp identity" >&2
+    echo "WARNING: could not determine server IP, defaulting to temp identity" >&2
     ln -sf "$TEMP_IDENTITY" "$IDENTITY_LINK"
     exit 0
 fi
@@ -30,23 +30,46 @@ fi
 echo "Server IP: $MY_IP"
 
 GOSSIP_IP=""
+GOSSIP_CHECK_OK=0
+
 for i in $(seq 1 $GOSSIP_LOOPS); do
     echo "Gossip check $i/$GOSSIP_LOOPS..."
-    GOSSIP_IP=$(curl -s --max-time 10 -X POST "$RPC_URL" \
+
+    RESPONSE=$(curl -s --max-time 10 -X POST "$RPC_URL" \
         -H "Content-Type: application/json" \
-        -d '{"jsonrpc":"2.0","id":1,"method":"getClusterNodes"}' | \
-        jq -r ".result[] | select(.pubkey == \"$IDENTITY_PUBKEY\") | .gossip" 2>/dev/null | \
-        cut -d: -f1 || true)
-    if [ -n "$GOSSIP_IP" ] && [ "$GOSSIP_IP" != "null" ]; then
+        -d '{"jsonrpc":"2.0","id":1,"method":"getClusterNodes"}' || true)
+
+    if [ -z "$RESPONSE" ]; then
+        echo "WARNING: empty RPC response"
+        sleep $GOSSIP_INTERVAL
+        continue
+    fi
+
+    if ! echo "$RESPONSE" | jq -e '.result' >/dev/null 2>&1; then
+        echo "WARNING: RPC response did not contain .result"
+        sleep $GOSSIP_INTERVAL
+        continue
+    fi
+
+    GOSSIP_CHECK_OK=1
+
+    GOSSIP_IP=$(echo "$RESPONSE" | jq -r \
+        ".result[] | select(.pubkey == \"$IDENTITY_PUBKEY\") | .gossip // empty" | \
+        head -n1 | cut -d: -f1)
+
+    if [ -n "$GOSSIP_IP" ]; then
         echo "Found identity in gossip at IP: $GOSSIP_IP"
         break
     fi
     sleep $GOSSIP_INTERVAL
 done
 
-if [ -z "$GOSSIP_IP" ]; then
-    echo "Identity not found in gossip after $GOSSIP_LOOPS checks, starting with primary identity"
-    ln -sf "$PRIMARY_IDENTITY" "$IDENTITY_LINK"
+if [ "$GOSSIP_CHECK_OK" -ne 1 ]; then
+    echo "WARNING: could not verify gossip state, starting with temp identity"
+    ln -sf "$TEMP_IDENTITY" "$IDENTITY_LINK"
+elif [ -z "$GOSSIP_IP" ]; then
+    echo "WARNING: identity not found in gossip, treating as inconclusive, starting with temp identity"
+    ln -sf "$TEMP_IDENTITY" "$IDENTITY_LINK"
 elif [ "$GOSSIP_IP" != "$MY_IP" ]; then
     echo "Identity is live on a different server ($GOSSIP_IP), starting with temp identity"
     ln -sf "$TEMP_IDENTITY" "$IDENTITY_LINK"
