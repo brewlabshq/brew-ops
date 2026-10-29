@@ -79,17 +79,17 @@ info "Setting identity from: $TEMP_IDENTITY_FILE"
 agave-validator -l /mnt/ledger set-identity "$TEMP_IDENTITY_FILE"
 ln -sf "$TEMP_IDENTITY_FILE" /home/sol/id.json
 
-# Get the public key from the identity file for tower file naming
+# Get the public key from the identity file for vote-history file naming
 PUBKEY=$(solana-keygen pubkey "$IDENTITY_FILE")
-TOWER_FILE="/mnt/ledger/tower-1_9-${PUBKEY}.bin"
+VOTE_HISTORY_FILE="/mnt/ledger/vote_history-${PUBKEY}.bin"
 
-# Check if tower file exists
-if [ ! -f "$TOWER_FILE" ]; then
-    warn "Tower file '$TOWER_FILE' does not exist, but continuing with SCP..."
+# Check if vote-history file exists
+if [ ! -f "$VOTE_HISTORY_FILE" ]; then
+    warn "Vote-history file '$VOTE_HISTORY_FILE' does not exist, but continuing with SCP..."
 fi
 
-# Copy tower file to remote server
-info "Copying tower file to remote server..."
-scp "$TOWER_FILE" "$SSH_DEST:/mnt/ledger"
+# Copy vote-history file to remote server
+info "Copying vote-history file to remote server..."
+scp "$VOTE_HISTORY_FILE" "$SSH_DEST:/mnt/ledger"
 
 ok "Migration completed successfully"

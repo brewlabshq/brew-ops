@@ -43,6 +43,6 @@ if [ ! -f "$IDENTITY_FILE" ]; then
 fi
 
 info "Setting identity from: $IDENTITY_FILE"
-agave-validator -l /mnt/ledger set-identity --require-tower "$IDENTITY_FILE"
+agave-validator -l /mnt/ledger set-identity "$IDENTITY_FILE"
 ln -sf "$IDENTITY_FILE" /home/sol/id.json
 ok "Identity set successfully"
